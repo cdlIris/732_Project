@@ -19,7 +19,7 @@ data_to=data_all[1]#data of every minute's end'''
 producer = KafkaProducer(bootstrap_servers=['localhost:9092'])
 
 def getbitcoin_minute(coinname):
-    url = 'https://min-api.cryptocompare.com/data/v2/histominute?fsym='+str(coinname)+'&tsym=GBP&limit=1'
+    url = 'https://min-api.cryptocompare.com/data/v2/histominute?fsym='+str(coinname)+'&tsym=USD&limit=1'
     print(url)
     r = requests.get(url)
     data = r.json()
