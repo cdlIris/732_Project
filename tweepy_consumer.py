@@ -25,7 +25,7 @@ spark = SparkSession.builder.appName('streaming example').getOrCreate()
 assert spark.version >= '2.4' # make sure we have Spark 2.4+
 spark.sparkContext.setLogLevel('WARN')
 
-import json
+import json, requests
 from datetime import datetime
 
 
@@ -55,6 +55,25 @@ udf_senti_score = functions.udf(get_senti_score)
 udf_get_text=functions.udf(get_text)
 udf_get_tweepy_time=functions.udf(get_tweepy_time)
 
+def foreach_batch_function(df, epoch_id):
+    pos = [p.pos for p in df.select("pos").collect()]
+    neg = [p.neg for p in df.select("neg").collect()]
+    neu = [p.neu for p in df.select("neu").collect()]
+    
+    url = 'http://127.0.0.1:5000/realtime/updateDecision'
+    if len(pos)==0:
+        pass
+    else:
+        print(pos)
+        print(neg)
+        print(neu)
+        props = []
+        props.append(np.mean(pos))
+        props.append(np.mean(neg))
+        props.append(np.mean(neu))
+        request_data = {'proportion': str(props)}
+        print(request_data)
+        response = requests.post(url, data=request_data)
 
 def main(topic1):
     
@@ -72,7 +91,7 @@ def main(topic1):
     values=values.withColumn('unix_timestamp',functions.unix_timestamp('str_timestamp', 'yyyy-MM-dd HH:mm:ss'))
     values=values.select('unix_timestamp','compound','neg','neu','pos')
     
-    stream = values.writeStream.format('console').outputMode('append').start()
+    stream = values.writeStream.foreachBatch(foreach_batch_function).start()
     stream.awaitTermination(600)
 
 if __name__ == '__main__':

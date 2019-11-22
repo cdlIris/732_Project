@@ -37,14 +37,14 @@ def foreach_batch_function(df, epoch_id):
         realtime_times.append(time[0])
     else:
         url = 'http://127.0.0.1:5000/realtime/updateData'
-        rand_num = random.random()
-        rand_list = [rand_num, 1-rand_num]
+        # rand_num = random.random()
+        # rand_list = [rand_num, 1-rand_num]
         del realtime_prices[0]
         del realtime_times[0]
         realtime_prices.append(prices[0])
         # realtime_times.append(convert_timestamp(time[0]))
         realtime_times.append(time[0])
-        request_data = {'label': str(realtime_times), 'data': str(realtime_prices), 'proportion':str(rand_list)}
+        request_data = {'label': str(realtime_times), 'data': str(realtime_prices)}
         print(request_data)
         response = requests.post(url, data=request_data)
 

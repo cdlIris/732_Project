@@ -49,10 +49,10 @@ def get_chart_page():
 
 @main.route('/realtime/refreshData')
 def refresh_graph_data():
-    global labels, values, props
+    global labels, values
     print("labels now: " + str(labels))
     print("data now: " + str(values))
-    return jsonify(sLabel=labels, sData=values, sProp=props)
+    return jsonify(sLabel=labels, sData=values)
 
 @main.route('/realtime/refreshDecision')
 def refresh_graph_decision():
@@ -63,7 +63,7 @@ def refresh_graph_decision():
 @main.route('/realtime/updateDecision', methods=['POST'])
 def update_decision():
     global props
-    if not request.form or 'data' not in request.form:
+    if not request.form or 'proportion' not in request.form:
         return "error", 400
     props = ast.literal_eval(request.form['proportion'])
     print("props received: " + str(props))
@@ -71,12 +71,12 @@ def update_decision():
 
 @main.route('/realtime/updateData', methods=['POST'])
 def update_data():
-    global labels, values, props
+    global labels, values
     if not request.form or 'data' not in request.form:
         return "error", 400
     labels = ast.literal_eval(request.form['label'])
     values = ast.literal_eval(request.form['data'])
-    props = ast.literal_eval(request.form['proportion'])
+    # props = ast.literal_eval(request.form['proportion'])
     print("labels received: " + str(labels))
     print("data received: " + str(values))
     return "success", 201
