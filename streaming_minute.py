@@ -4,8 +4,10 @@ from pyspark.sql import SparkSession, types
 from pyspark.sql import functions
 from datetime import datetime
 import requests, random
-
+from pyspark.ml import PipelineModel
+from pyspark.ml.evaluation import RegressionEvaluator
 import sys, os, re, string
+from pyspark.sql.window import Window
 
 conf = SparkConf().setAppName('streaming')
 
@@ -20,34 +22,53 @@ spark.sparkContext.setLogLevel('WARN')
 kafka = 'localhost:9092'
 zookeeper = "localhost:2181"
 
-DISPLAY_LEN = 3
+DISPLAY_LEN = 4
 realtime_prices = []
 realtime_times = []
 
+bitcoin_schema = types.StructType([
+    types.StructField('timestamp', types.TimestampType()),
+    types.StructField('Open', types.FloatType()),
+    types.StructField('High', types.FloatType()),
+    types.StructField('Low', types.FloatType()),
+    types.StructField('Close', types.FloatType()),
+    types.StructField('Volume USD', types.FloatType()),
+    types.StructField('Volume BTC', types.FloatType()),
+
+])
+
+col_order = ["timestamp", "Open", "High", "Low", "Close", "Volume USD", "Volume BTC"]
+
+
 def foreach_batch_function(df, epoch_id):
-    prices = [str(p.close_end) for p in df.select("close_end").collect()]
-    time = [str(t.time_end) for t in df.select("time_end").collect()]
-    print(realtime_prices)
-    # assert len(prices)==1
-    if len(prices)==0:
+    data = [df.collect()]
+
+    if len(data[0]) == 0:
         pass
-    elif len(realtime_prices)<DISPLAY_LEN:
-        realtime_prices.append(prices[0])
-        # realtime_times.append(convert_timestamp(time[0]))
-        realtime_times.append(time[0])
+    elif len(realtime_prices) < DISPLAY_LEN:
+        realtime_prices.append(data[0][0])
+        print("!!!!!!!!!!!", realtime_prices)
     else:
         url = 'http://127.0.0.1:5000/realtime/updateData'
-        # rand_num = random.random()
-        # rand_list = [rand_num, 1-rand_num]
-        del realtime_prices[0]
-        del realtime_times[0]
-        realtime_prices.append(prices[0])
-        # realtime_times.append(convert_timestamp(time[0]))
-        realtime_times.append(time[0])
-        request_data = {'label': str(realtime_times), 'data': str(realtime_prices)}
-        print(request_data)
-        response = requests.post(url, data=request_data)
+        df = spark.createDataFrame(realtime_prices)
+        model = PipelineModel.load("bitcoin_model")
+        df.show()
+        w = Window.partitionBy().orderBy(functions.col("timestamp").cast('long'))
 
+        for feature in col_order[1:]:
+            for diff in range(1,4):
+                name = feature + "_lag_{}".format(diff)
+                df = df.withColumn(name, functions.lag(df[feature], count=diff).over(w))
+        df = df.na.drop()
+        
+        predictions = model.transform(df)
+        predictions.select("prediction").show()
+    
+        del realtime_prices[0]
+        realtime_prices.append(data[0][0])
+        assert(len(realtime_prices) == DISPLAY_LEN)
+                             
+      
 @functions.udf(returnType=types.StringType())
 def convert_timestamp(timestamp):
     return datetime.fromtimestamp(int(timestamp)).strftime("%Y/%m/%d %H:%M")
@@ -55,14 +76,34 @@ def convert_timestamp(timestamp):
 def main():
     messages = spark.readStream.format('kafka').option('kafka.bootstrap.servers', 'localhost:9092').option('subscribe','bitcoin_minute').load()
     values = messages.select(messages['value'].cast('string'))
-    data = values.withColumn('timestart', functions.split(values['value'], ' ')[0]).withColumn('high_start',functions.split(values['value'],' ')[1]).withColumn('low_start',functions.split(values['value'],' ')[2]).withColumn('open_start',functions.split(values['value'],' ')[3]).withColumn('volumefrom_start',functions.split(values['value'],' ')[4]).withColumn('volumeto_start',functions.split(values['value'],' ')[5]).withColumn('close_start',functions.split(values['value'],' ')[6]).withColumn('timeend',functions.split(values['value'],' ')[7]).withColumn('high_end',functions.split(values['value'],' ')[8]).withColumn('low_end',functions.split(values['value'],' ')[6]).withColumn('open_end',functions.split(values['value'],' ')[7]).withColumn('volumefrom_end',functions.split(values['value'],' ')[8]).withColumn('volumeto_end',functions.split(values['value'],' ')[9]).withColumn('close_end',functions.split(values['value'],' ')[10])
-    # convert timestamp to datetime YYYY-MM-DD HH:MM
-    data = data.withColumn('time_end', convert_timestamp(data['timeend']))
-    data =data.select('timestart','high_start','low_start','open_start','volumefrom_start','volumeto_start','close_start','time_end','high_end','low_end','open_end','volumefrom_end','volumeto_end','close_end')
+    data = values.withColumn(
+        'timestart', functions.split(values['value'], ' ')[0]).withColumn(
+        'high_start',functions.split(values['value'],' ')[1]).withColumn(
+        'low_start',functions.split(values['value'],' ')[2]).withColumn(
+        'open_start',functions.split(values['value'],' ')[3]).withColumn(
+        'volumefrom_start',functions.split(values['value'],' ')[4]).withColumn(
+        'volumeto_start',functions.split(values['value'],' ')[5]).withColumn(
+        'close_start',functions.split(values['value'],' ')[6]).withColumn(
+        'timeend',functions.split(values['value'],' ')[7]).withColumn(
+        'High', functions.split(values['value'],' ')[8]).withColumn(
+        'Low', functions.split(values['value'],' ')[9]).withColumn(
+        'Open', functions.split(values['value'],' ')[10]).withColumn(
+        'Volume BTC', functions.split(values['value'],' ')[11]).withColumn(
+        'Volume USD', functions.split(values['value'],' ')[12]).withColumn(
+        'Close', functions.split(values['value'],' ')[13])
 
+    # convert timestamp to datetime YYYY-MM-DD HH:MM
+    data = data.withColumn('time_end', convert_timestamp(data['timeend'])).drop("timeend")
+    data = data.withColumn('timestamp', functions.unix_timestamp("time_end", 'yyyy/MM/dd HH:mm').cast("timestamp")).drop("time_end")
+    data = data.select(data["timestamp"],
+                       data["Open"].cast("float"),
+                       data["High"].cast("float"),
+                       data["Low"].cast("float"),
+                       data["Close"].cast("float"),
+                       data["Volume BTC"].cast("float"),
+                       data["Volume USD"].cast("float"))
 
     stream = data.writeStream.foreachBatch(foreach_batch_function).start()
-    
     stream.awaitTermination(600)
     
 
