@@ -72,19 +72,21 @@ def main(topic1):
     values=values.withColumn('unix_timestamp',functions.unix_timestamp('str_timestamp', 'yyyy-MM-dd HH:mm:ss').cast('timestamp'))
     values=values.select('str_timestamp','unix_timestamp','compound','neg','neu','pos') # finally, we get these six columns
 
-    def processRow(df, epoch_id,my_time):  #this is the BATCH function to convert structrued streaming to spark dataframe
+    def processRow(df, epoch_id):  #this is the BATCH function to convert structrued streaming to spark dataframe
         print("*********batch number:: ***********",epoch_id)
-
+        
+        #by applying window function, we can split each minute to 5 interval with 12s each, this fits our training model requirement
         df=df.groupBy(functions.window("unix_timestamp", "12 seconds")).agg(functions.avg('compound').alias('compound'),functions.avg('neg').alias('neg'),functions.avg('neu').alias('neu'),functions.avg('pos').alias('pos'))
         df=df.select('window.end','compound','neg','neu','pos').orderBy('end').limit(5)
 
         
         if df.count()>=5: #we have the previous 5 interval's output for each minutes,then do the prediction by using sentiment model
-            
-        df.show()
+            print("Begin model prediction here...............")
+        
+        df.show(5,False)
 
-    #I pass a local time inside the function. By the logic the local time 
-    stream = values.writeStream.trigger(processingTime='60 seconds').outputMode('Append').foreachBatch(lambda x,y: processRow(x,y,time.strftime("%Y-%m-%d %H:%M:%S",time.localtime()))).start()
+    #I set trigger=60s to pass the streaming each 1 minutes 
+    stream = values.writeStream.trigger(processingTime='60 seconds').outputMode('Append').foreachBatch(processRow).start()
     stream.awaitTermination(6000)
 
 if __name__ == '__main__':
