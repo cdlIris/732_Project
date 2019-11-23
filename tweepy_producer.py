@@ -17,30 +17,33 @@ import requests
 import json
 from datetime import datetime
 
+count=0
+
     
 
 class StdOutListener(StreamListener):
-    def __init__(self, star_time, kafka_producer,topic,batch=3):
-        self.batch = batch
-        
+    def __init__(self, star_time, kafka_producer,topic):
+
         StdOutListener.count = 0
         self.star_time = star_time  # record the program beginning time
-        self.senti_collect = []  # each batch time's collection of sentimental comments
+        
         self.producer=kafka_producer
+        
 
     def on_data(self, data):  # here we deal with each streaming
 
         msg=data
-        #print("\n********tweepy********流：： ",msg,'\n')
-        
-        #【试验区】
+
         tmp=json.loads(msg)
         cc=int(int(tmp['timestamp_ms'])/1000)
-        kaka=datetime.fromtimestamp(cc)
-        print('打印时间:::  ',kaka)
+        kaka=datetime.fromtimestamp(cc) 
+        
+        global count
+        count+=1
+        print('time:::  ',kaka, 'total tweets:: ',count)
         
         
-        self.producer.send(topic, msg.encode('ascii'))
+        self.producer.send(topic, msg.encode('ascii'))# send to kafka producer and wait for receiver
 
         return 1
 
@@ -51,7 +54,7 @@ class StdOutListener(StreamListener):
         print(status)
 
 
-def twitt_stream(kafka_producer,topic):
+def twitt_stream(kafka_producer,topic): # write tweepy function
 
     common_time = time.time()  # beginning time
     interva = 3  # the time inverval updating tweets and trading decision
@@ -64,10 +67,9 @@ def twitt_stream(kafka_producer,topic):
     stream.filter(languages=["en"], track=['btc', 'bitcoin', 'BitCoin', 'cryptocurrency'])
     
 
-
 if __name__ == "__main__":
-    topic='my_tweets'
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'],api_version=(0,1,0))
+    topic=sys.argv[1]
+    producer = KafkaProducer(bootstrap_servers=['localhost:9092'],api_version=(0,1,0)) # create kafka producer instance
     twitt_stream(producer,topic)
     
 
