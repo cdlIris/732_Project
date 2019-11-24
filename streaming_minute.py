@@ -81,15 +81,15 @@ def main():
         'high_start',functions.split(values['value'],' ')[1]).withColumn(
         'low_start',functions.split(values['value'],' ')[2]).withColumn(
         'open_start',functions.split(values['value'],' ')[3]).withColumn(
-        'volumefrom_start',functions.split(values['value'],' ')[4]).withColumn(
-        'volumeto_start',functions.split(values['value'],' ')[5]).withColumn(
+        'Volume BTC',functions.split(values['value'],' ')[4]).withColumn(
+        'Volume USD',functions.split(values['value'],' ')[5]).withColumn(
         'close_start',functions.split(values['value'],' ')[6]).withColumn(
         'timeend',functions.split(values['value'],' ')[7]).withColumn(
         'High', functions.split(values['value'],' ')[8]).withColumn(
         'Low', functions.split(values['value'],' ')[9]).withColumn(
         'Open', functions.split(values['value'],' ')[10]).withColumn(
-        'Volume BTC', functions.split(values['value'],' ')[11]).withColumn(
-        'Volume USD', functions.split(values['value'],' ')[12]).withColumn(
+        'Volumefrom_end', functions.split(values['value'],' ')[11]).withColumn(
+        'Volumeto_end', functions.split(values['value'],' ')[12]).withColumn(
         'Close', functions.split(values['value'],' ')[13])
 
     # convert timestamp to datetime YYYY-MM-DD HH:MM
