@@ -58,7 +58,7 @@ def twitt_stream(kafka_producer,topic): # write tweepy function
 
     common_time = time.time()  # beginning time
     interva = 3  # the time inverval updating tweets and trading decision
-    listener = StdOutListener(int(common_time), kafka_producer,topic,interva)
+    listener = StdOutListener(int(common_time), kafka_producer,topic)
     auth = OAuthHandler("PQEim5Uq9jFq3YiMGF12CS7oz", "8gYnr83KbscFqaqE0I5vvGKIjehcVXwGvd43fvR7UL2iEpzhyE")
     auth.set_access_token("1065559266784878592-9VP0iOYDmVzkD84iaEKNVZHk0jb6fi",
                           "9qETNhtRPrN02QpG4yyTqZnj101HqYPQXViVO5veWm964")
