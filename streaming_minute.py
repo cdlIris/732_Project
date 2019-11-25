@@ -2,7 +2,7 @@ from pyspark import SparkConf, SparkContext
 
 from pyspark.sql import SparkSession, types
 from pyspark.sql import functions
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests, random
 from pyspark.ml import PipelineModel
 from pyspark.ml.evaluation import RegressionEvaluator
@@ -23,8 +23,9 @@ kafka = 'localhost:9092'
 zookeeper = "localhost:2181"
 
 DISPLAY_LEN = 4
+LIST_LEN = DISPLAY_LEN+1
 realtime_prices = []
-realtime_times = []
+realtime_predictions = []
 
 bitcoin_schema = types.StructType([
     types.StructField('timestamp', types.TimestampType()),
@@ -63,6 +64,20 @@ def foreach_batch_function(df, epoch_id):
         
         predictions = model.transform(df)
         predictions.select("prediction").show()
+
+        pred = predictions.select("prediction").collect()
+        realtime_predictions.append(str(pred[0].prediction))
+        diff = LIST_LEN-len(realtime_predictions)
+        if diff > 0:
+            pred_list = [None for i in range(diff)]+realtime_predictions
+        else:
+            pred_list = [num for num in realtime_predictions]
+            del realtime_predictions[0]
+        real_time = [str(item.timestamp) for item in realtime_prices] + [str(realtime_prices[-1].timestamp+timedelta(minutes=1))]
+        real_prices = [str(item.Close) for item in realtime_prices] + [None]
+        request_data = {'label': str(real_time), 'data': str(real_prices), 'prediction':str(pred_list)}
+        print(request_data)
+        response = requests.post(url, data=request_data)
     
         del realtime_prices[0]
         realtime_prices.append(data[0][0])

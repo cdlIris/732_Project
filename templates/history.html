@@ -9,17 +9,17 @@
 </head>
 
 <body>
-
+  <div class="col-md-12">
+    <h1>Historical Price</h1>
     <a class="btn btn-success" href='/history'>Overview</a>
-    <!-- 信息警告消息的上下文按钮 -->
     <a class="btn btn-info" href='/history/daily'>Daily Average</a>
-    <!-- 表示应谨慎采取的动作 -->
     <a class="btn btn-primary" href='/history/day'>Day of Year Average</a>
     <a class="btn btn-warning" href='/history/monthly'>Monthly Average</a>
     <div class="wrapper">
-    <h1>Historical Price</h1>
-    <canvas id="myChart" width="1600" height="900"></canvas>
+    
+    <canvas id="myChart" width="1000" height="500"></canvas>
     </div>
+  </div>
     
     <script>
       // reference: https://gitlab.com/patkennedy79/flask_chartjs_example
@@ -60,6 +60,11 @@
         var myChart = new Chart(ctx, {
             type: 'line',
             data: chartData,
+            options:{
+              legend:{
+                align: 'end'
+              }
+            }
         });
     </script>
 

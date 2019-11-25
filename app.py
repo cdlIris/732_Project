@@ -26,33 +26,36 @@ def index():
 @main.route("/history", methods=["GET"])
 def get_full_data():
     label, value = bitcoin_model.get_full_data()
-    return render_template('history.html', title='Bitcoin price', labels=label, values=value)
+    return render_template('history.html', title='Bitcoin price in USD', labels=label, values=value)
 @main.route("/history/daily", methods=["GET"])
 def get_daily():
     label, value = bitcoin_model.get_daily_avg()
-    return render_template('history.html', title='Bitcoin price', labels=label, values=value)
+    return render_template('history.html', title='Bitcoin price in USD', labels=label, values=value)
 @main.route("/history/monthly", methods=["GET"])
 def get_monthly():
     label, value = bitcoin_model.get_monthly_avg()
-    return render_template('history.html', title='Bitcoin price', labels=label, values=value)
+    return render_template('history.html', title='Bitcoin price in USD', labels=label, values=value)
 
 labels = []
 values = []
 props = []
+predictions = []
 @main.route("/realtime")
 def get_chart_page():
-    global labels,values,props
+    global labels,values,props,predictions
     labels = []
     values = []
     props = []
-    return render_template('realtime.html', values=values, labels=labels, props=props)
+    predictions = []
+    return render_template('realtime.html', values=values, labels=labels, props=props, predictions=predictions)
 
 @main.route('/realtime/refreshData')
 def refresh_graph_data():
-    global labels, values
+    global labels, values, predictions
     print("labels now: " + str(labels))
     print("data now: " + str(values))
-    return jsonify(sLabel=labels, sData=values)
+    print("pred now: " + str(predictions))
+    return jsonify(sLabel=labels, sData=values, sPred=predictions)
 
 @main.route('/realtime/refreshDecision')
 def refresh_graph_decision():
@@ -71,14 +74,16 @@ def update_decision():
 
 @main.route('/realtime/updateData', methods=['POST'])
 def update_data():
-    global labels, values
+    global labels, values, predictions
     if not request.form or 'data' not in request.form:
         return "error", 400
     labels = ast.literal_eval(request.form['label'])
     values = ast.literal_eval(request.form['data'])
+    predictions = ast.literal_eval(request.form['prediction'])
     # props = ast.literal_eval(request.form['proportion'])
     print("labels received: " + str(labels))
     print("data received: " + str(values))
+    print("pred received: " + str(predictions))
     return "success", 201
 
 

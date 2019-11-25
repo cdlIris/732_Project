@@ -1,8 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Welcome{% endblock %}
 {% block page_content %}
-
+<!-- 
 <h1>Hello World!</h1>
-<a class="btn btn-info btn-lg" href="/history"> Start </a>
+<a class="btn btn-info btn-lg" href="/history"> Start </a> -->
+<style>
+        .header { 
+          background-color: #ffffff; 
+          color: #264d73;
+          padding: 100px;
+          text-align: center;
+          width: 100%;
+          /* font-size: 100px; */
+        }
+        
+</style>
+        
+<body>
+    <div class="header">
+        <h1>Project Name</h1> 
+        <h4>Short introduction of what we are doing here...</h4> 
+        <a class=".btn-primary" href="/realtime"> Start </a>
+    </div>
+</body>
 
 {% endblock %}

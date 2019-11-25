@@ -5,22 +5,49 @@
 <html>
 	<head>
     	<meta charset="utf-8"/>
-    	<title>Real-Time Bitcoin Price in USD</title>
+    	<title>Real-Time Bitcoin Price</title>
     	<script src='https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js'></script>
     	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 	
 	</head>
 	<body>
-        	<h2>Real-Time Bitcoin Price</h2>
+    <style>
+        .bg-grey {
+            background-color: #f6f6f6;
+        }
+        .container-fluid {
+            padding: 60px 50px;
+        }
+    </style>
+    <div class="container-fluid">
+        <div class="row">
+        <div class="col-sm-8" style="text-align: center;">
+        	<h2>Real-Time Bitcoin Price in USD</h2>
         	<div style="width:700px;height=500px">
             	<canvas id="chart"></canvas>
             </div>
-            <h2>Sample pie chart</h2>
-            <div style="width:700px;height=500px">
-            	<canvas id="pie_chart"></canvas>
-            </div>
+        </div>
+        <div class="col-sm-4" style="text-align: center;">
+            <h4>some explanations here.</h4>
+        </div>
+        </div>
+    </div>
+    <div class="container-fluid bg-grey">
+        <div class="row">
+        <div class="col-sm-4" style="text-align: center;">
+            <h4>some explanations here.</h4>
+        </div>
+        <div class="col-sm-8" style="text-align: center;">
+                <h2>Sample pie chart</h2>
+                <div style="width:500px;height=350px">
+                    <canvas id="pie_chart"></canvas>
+                </div>
+        </div>
+        </div>
+    </div>
+
+        <!-- <script for rendering and updating charts> -->
             <script>
-                
                 var ctx = document.getElementById("chart");
                 var ctx2 = document.getElementById("pie_chart");
                 var myChart = new Chart(ctx, {
@@ -30,24 +57,26 @@
                                    "{{item}}",
                                   {% endfor %}],
                          datasets: [{
-                             label: 'BTC/USD',
+                             label: 'Realtime BTC/USD',
                              data: [{% for item in values %}
                                        {{item}},
                                      {% endfor %}],
-                            //  backgroundColor: [
-                            //      'rgba(255, 99, 132, 0.2)',
-                            //      'rgba(54, 162, 235, 0.2)',
-                            //      'rgba(255, 206, 86, 0.2)',
-                            //      'rgba(75, 192, 192, 0.2)',
-                            //      'rgba(153, 102, 255, 0.2)',
-                            //      'rgba(255, 159, 64, 0.2)',
-                            //      'rgba(255, 99, 132, 0.2)',
-                            //      'rgba(54, 162, 235, 0.2)',
-                            //      'rgba(255, 206, 86, 0.2)',
-                            //      'rgba(75, 192, 192, 0.2)',
-                            //      'rgba(153, 102, 255, 0.2)'
-                            //  ],
                              borderColor: "#3e95cd",
+                             pointColor: "#3e95cd",
+                             pointStrokeColor: "#fff",
+                             pointHighlightFill: "#fff",
+                             pointHighlightStroke:"#3e95cd",
+                             fill: false
+                         }, {
+                             label: 'Predicted BTC/USD',
+                             data: [{% for item in predictions %}
+                                        {{item}}
+                                    {% endfor %}],
+                             borderColor: "#c45850",
+                             pointColor: "#c45850",
+                             pointStrokeColor: "#fff",
+                             pointHighlightFill: "#fff",
+                             pointHighlightStroke:"#c45850",
                              fill: false
                          }]
                      },
@@ -64,35 +93,46 @@
                 var pieChart = new Chart(ctx2, {
                      type: 'pie',
                      data: {
-                         labels: ['num1', 'num2'],
+                         labels: ['pos', 'neg', 'neu'],
                          datasets: [{
                              data: [{% for item in proportion %}
                                        {{item}},
                                      {% endfor %}],
                              backgroundColor: [
                                  'rgba(255, 99, 132, 0.2)',
-                                 'rgba(54, 162, 235, 0.2)'
+                                 'rgba(54, 162, 235, 0.2)',
+                                 'rgba(255, 206, 86, 0.2)'
                              ]
                          }]
+                     },
+                     options: {
+                         legend:{
+                             position: 'left'
+                         }
                      }
                 });
                 var src_Labels = [];
                 var src_Data = [];
                 var src_Prop = [];
+                var src_Pred = [];
                 setInterval(function(){
                      $.getJSON('/realtime/refreshData', {
                      }, function(data) {
                          src_Labels = data.sLabel;
                          src_Data = data.sData;
-                         src_Prop = data.sProp;
+                         src_Pred = data.sPred;
+                        //  src_Prop = data.sProp;
                      });
                      if (src_Data.length!=0){
                         myChart.data.labels = src_Labels;
                         myChart.data.datasets[0].data = src_Data;
-                        pieChart.data.datasets[0].data = src_Prop;
+                        myChart.data.datasets[1].data = src_Pred;
                         myChart.update();
-                        pieChart.update();
                      }
+                    //  if (src_Prop.length!=0){
+                    //     pieChart.data.datasets[0].data = src_Prop;
+                    //     pieChart.update();
+                    //  }
                 },1000);
                 setInterval(function(){
                      $.getJSON('/realtime/refreshDecision', {
