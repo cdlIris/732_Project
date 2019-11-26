@@ -38,7 +38,7 @@
             <h4>some explanations here.</h4>
         </div>
         <div class="col-sm-8" style="text-align: center;">
-                <h2>Sample pie chart</h2>
+                <h2>Buy/Sell Decision</h2>
                 <div style="width:500px;height=350px">
                     <canvas id="pie_chart"></canvas>
                 </div>
@@ -93,15 +93,15 @@
                 var pieChart = new Chart(ctx2, {
                      type: 'pie',
                      data: {
-                         labels: ['pos', 'neg', 'neu'],
+                         labels: ['Buy', 'Sell'],
                          datasets: [{
                              data: [{% for item in proportion %}
                                        {{item}},
                                      {% endfor %}],
                              backgroundColor: [
                                  'rgba(255, 99, 132, 0.2)',
-                                 'rgba(54, 162, 235, 0.2)',
-                                 'rgba(255, 206, 86, 0.2)'
+                                 'rgba(54, 162, 235, 0.2)'
+                                //  'rgba(255, 206, 86, 0.2)'
                              ]
                          }]
                      },

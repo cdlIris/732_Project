@@ -31,6 +31,7 @@ spark.sparkContext.setLogLevel('WARN')
 import json
 from datetime import datetime
 import time 
+import requests
 
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -94,8 +95,17 @@ def main(topic1):
 
             predictions = model.transform(df)
             predictions.select("prediction", "probability").show()
+            # probability = [P(close-open<0), P(close-open>0)]
+            url = 'http://127.0.0.1:5000/realtime/updateDecision'
+            pred = predictions.select("prediction", "probability").collect()
+            print(pred[0].prediction)
+            prob = pred[0].probability
+            # print("\n\n!!!!!!!!!", prob, pred[0].prediction)
+            request_data = {'proportion': str(prob)}
+            print(request_data)
+            response = requests.post(url, data=request_data)
 
-        df.show(5,False)
+        # df.show(5,False)
 
     #I set trigger=60s to pass the streaming each 1 minutes 
     stream = values.writeStream.trigger(processingTime='60 seconds').outputMode('Append').foreachBatch(processRow).start()  
