@@ -17,32 +17,23 @@ import requests
 import json
 from datetime import datetime
 
-count=0
 
-    
-
-class StdOutListener(StreamListener):
+class StdOutListener(StreamListener): #rewrite the tweepy socket class
     def __init__(self, star_time, kafka_producer,topic):
 
         StdOutListener.count = 0
         self.star_time = star_time  # record the program beginning time
         
         self.producer=kafka_producer
+        self.count=0
         
 
     def on_data(self, data):  # here we deal with each streaming
 
-        msg=data
-
-        tmp=json.loads(msg)
-        cc=int(int(tmp['timestamp_ms'])/1000)
-        kaka=datetime.fromtimestamp(cc) 
-        
-        global count
-        count+=1
-        print('time:::  ',kaka, 'total tweets:: ',count)
-        
-        
+        msg=data 
+        self.count+=1
+        print('time:::  ',time.strftime("%b %d %Y %H:%M:%S", time.gmtime()), 'total tweets:: ',self.count)
+        #print(json.loads(msg))
         self.producer.send(topic, msg.encode('ascii'))# send to kafka producer and wait for receiver
 
         return 1
@@ -56,8 +47,7 @@ class StdOutListener(StreamListener):
 
 def twitt_stream(kafka_producer,topic): # write tweepy function
 
-    common_time = time.time()  # beginning time
-    interva = 3  # the time inverval updating tweets and trading decision
+    common_time = time.time()  # make a record of begining time we open the tweets
     listener = StdOutListener(int(common_time), kafka_producer,topic)
     auth = OAuthHandler("PQEim5Uq9jFq3YiMGF12CS7oz", "8gYnr83KbscFqaqE0I5vvGKIjehcVXwGvd43fvR7UL2iEpzhyE")
     auth.set_access_token("1065559266784878592-9VP0iOYDmVzkD84iaEKNVZHk0jb6fi",

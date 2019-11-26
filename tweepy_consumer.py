@@ -46,7 +46,6 @@ def get_text(line): #data preprocessing to get the text column
     tmp=json.loads(line)
     return tmp['text']
 
-
 def get_senti_score(line): # we use vaderSentiment to get sentimental scores
     
     sentiment_dict = sid_obj.polarity_scores(line)   
@@ -56,11 +55,13 @@ udf_senti_score = functions.udf(get_senti_score)
 udf_get_text=functions.udf(get_text)
 udf_get_tweepy_time=functions.udf(get_tweepy_time)
 
+
 def main(topic1):
     
     messages = spark.readStream.format('kafka').option('subscribe',topic).option('kafka.bootstrap.servers', 'localhost:9092').load()
     print('successful connect to get tweepy streaming........')
     values = messages.select(messages['value'].cast('string'))
+    
     values=values.withColumn('text',udf_get_text(values['value']).cast('string'))
     values=values.withColumn('senti_score',functions.split(udf_senti_score(values['text']),' '))#convert to Array structure spark datatype
     values=values.withColumn('compound',values['senti_score'][0].cast('float'))
@@ -69,12 +70,13 @@ def main(topic1):
     values=values.withColumn('pos',values['senti_score'][3].cast('float'))
     
     values=values.withColumn('str_timestamp',udf_get_tweepy_time(values['value']).cast('string'))
+  
     values=values.withColumn('unix_timestamp',functions.unix_timestamp('str_timestamp', 'yyyy-MM-dd HH:mm:ss').cast('timestamp'))
     values=values.select('str_timestamp','unix_timestamp','compound','neg','neu','pos') # finally, we get these six columns
 
     def processRow(df, epoch_id):  #this is the BATCH function to convert structrued streaming to spark dataframe
         print("*********batch number:: ***********",epoch_id)
-        
+        #here we could save file to local or backup these logs to the remote service
         #by applying window function, we can split each minute to 5 interval with 12s each, this fits our training model requirement
         df=df.groupBy(functions.window("unix_timestamp", "12 seconds")).agg(functions.avg('compound').alias('compound'),functions.avg('neg').alias('neg'),functions.avg('neu').alias('neu'),functions.avg('pos').alias('pos'))
         df=df.select('window.end','compound','neg','neu','pos').orderBy('end').limit(5)
@@ -86,7 +88,7 @@ def main(topic1):
         df.show(5,False)
 
     #I set trigger=60s to pass the streaming each 1 minutes 
-    stream = values.writeStream.trigger(processingTime='60 seconds').outputMode('Append').foreachBatch(processRow).start()
+    stream = values.writeStream.trigger(processingTime='60 seconds').outputMode('Append').foreachBatch(processRow).start()  
     stream.awaitTermination(6000)
 
 if __name__ == '__main__':
