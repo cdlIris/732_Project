@@ -7,9 +7,9 @@ Created on Mon Nov 11 15:20:10 2019
 
 import sys
 import os
-
+from pyspark.sql.window import Window
 import copy
-
+from pyspark.ml import PipelineModel
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
@@ -26,7 +26,7 @@ spark = SparkSession.builder.appName('streaming example').getOrCreate()
 assert spark.version >= '2.4' # make sure we have Spark 2.4+
 spark.sparkContext.setLogLevel('WARN')
 
-spark.sparkContext.setCheckpointDir("/spark_checkpoint");
+# spark.sparkContext.setCheckpointDir("/spark_checkpoint");
 
 import json
 from datetime import datetime
@@ -65,26 +65,36 @@ def main(topic1):
     values=values.withColumn('text',udf_get_text(values['value']).cast('string'))
     values=values.withColumn('senti_score',functions.split(udf_senti_score(values['text']),' '))#convert to Array structure spark datatype
     values=values.withColumn('compound',values['senti_score'][0].cast('float'))
-    values=values.withColumn('neg',values['senti_score'][1].cast('float'))
-    values=values.withColumn('neu',values['senti_score'][2].cast('float'))
-    values=values.withColumn('pos',values['senti_score'][3].cast('float'))
+    values=values.withColumn('negative',values['senti_score'][1].cast('float'))
+    values=values.withColumn('neutral',values['senti_score'][2].cast('float'))
+    values=values.withColumn('positive',values['senti_score'][3].cast('float'))
     
     values=values.withColumn('str_timestamp',udf_get_tweepy_time(values['value']).cast('string'))
   
     values=values.withColumn('unix_timestamp',functions.unix_timestamp('str_timestamp', 'yyyy-MM-dd HH:mm:ss').cast('timestamp'))
-    values=values.select('str_timestamp','unix_timestamp','compound','neg','neu','pos') # finally, we get these six columns
+    values=values.select('str_timestamp','unix_timestamp','compound','negative','neutral','positive') # finally, we get these six columns
 
     def processRow(df, epoch_id):  #this is the BATCH function to convert structrued streaming to spark dataframe
         print("*********batch number:: ***********",epoch_id)
         #here we could save file to local or backup these logs to the remote service
         #by applying window function, we can split each minute to 5 interval with 12s each, this fits our training model requirement
-        df=df.groupBy(functions.window("unix_timestamp", "12 seconds")).agg(functions.avg('compound').alias('compound'),functions.avg('neg').alias('neg'),functions.avg('neu').alias('neu'),functions.avg('pos').alias('pos'))
-        df=df.select('window.end','compound','neg','neu','pos').orderBy('end').limit(5)
+        df=df.groupBy(functions.window("unix_timestamp", "12 seconds")).agg(functions.avg('compound').alias('compound'),functions.avg('negative').alias('negative'),functions.avg('neutral').alias('neutral'),functions.avg('positive').alias('positive'))
+        df=df.select('window.end','compound','negative','neutral','positive').orderBy('end').limit(5)
 
         
         if df.count()>=5: #we have the previous 5 interval's output for each minutes,then do the prediction by using sentiment model
             print("Begin model prediction here...............")
-        
+            w = Window.partitionBy().orderBy(functions.col("end").cast('long'))
+            model = PipelineModel.load("tweet_model")
+            for feature in ["negative", "neutral", "positive", "compound"]:
+                for diff in range(1, 5):
+                    name = feature + "_lag_{}".format(diff)
+                    df = df.withColumn(name, functions.lag(df[feature], count=diff).over(w))
+            df = df.na.drop()
+
+            predictions = model.transform(df)
+            predictions.select("prediction").show()
+
         df.show(5,False)
 
     #I set trigger=60s to pass the streaming each 1 minutes 
