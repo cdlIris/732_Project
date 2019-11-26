@@ -93,7 +93,7 @@ def main(topic1):
             df = df.na.drop()
 
             predictions = model.transform(df)
-            predictions.select("prediction").show()
+            predictions.select("prediction", "probability").show()
 
         df.show(5,False)
 
