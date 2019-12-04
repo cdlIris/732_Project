@@ -40,6 +40,10 @@ bitcoin_schema = types.StructType([
 
 col_order = ["timestamp", "Open", "High", "Low", "Close", "Volume USD", "Volume BTC", "Weighted"]
 
+assembler = VectorAssembler(
+                            inputCols = col_order,
+                            outputCol = "features")
+                            
 
 def foreach_batch_function(df, epoch_id):
     data = [df.collect()]
@@ -118,6 +122,7 @@ def main():
                        functions.log(data["Volume BTC"].cast("float") + sys.float_info.min).alias("Volume BTC"),
                        functions.log(data["Volume USD"].cast("float") + sys.float_info.min).alias("Volume USD"),
                        (functions.log(data["Volume USD"].cast("float") + sys.float_info.min) - functions.log(data["Volume BTC"].cast("float") + sys.float_info.min)).alias("Weighted"))
+    
     
     stream = data.writeStream.foreachBatch(foreach_batch_function).start()
     stream.awaitTermination(600)
