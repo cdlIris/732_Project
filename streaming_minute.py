@@ -35,10 +35,10 @@ bitcoin_schema = types.StructType([
     types.StructField('Close', types.FloatType()),
     types.StructField('Volume USD', types.FloatType()),
     types.StructField('Volume BTC', types.FloatType()),
-
+    types.StructField("Weighted", types.FloatType())
 ])
 
-col_order = ["timestamp", "Open", "High", "Low", "Close", "Volume USD", "Volume BTC"]
+col_order = ["timestamp", "Open", "High", "Low", "Close", "Volume USD", "Volume BTC", "Weighted"]
 
 
 def foreach_batch_function(df, epoch_id):
@@ -111,13 +111,14 @@ def main():
     data = data.withColumn('time_end', convert_timestamp(data['timeend'])).drop("timeend")
     data = data.withColumn('timestamp', functions.unix_timestamp("time_end", 'yyyy/MM/dd HH:mm').cast("timestamp")).drop("time_end")
     data = data.select(data["timestamp"],
-                       data["Open"].cast("float"),
-                       data["High"].cast("float"),
-                       data["Low"].cast("float"),
-                       data["Close"].cast("float"),
-                       data["Volume BTC"].cast("float"),
-                       data["Volume USD"].cast("float"))
-
+                       functions.log(data["Open"].cast("float") + sys.float_info.min).alias("Open"),
+                       functions.log(data["High"].cast("float") + sys.float_info.min).alias("High"),
+                       functions.log(data["Low"].cast("float") + sys.float_info.min).alias("Low"),
+                       functions.log(data["Close"].cast("float") + sys.float_info.min).alias("Close"),
+                       functions.log(data["Volume BTC"].cast("float") + sys.float_info.min).alias("Volume BTC"),
+                       functions.log(data["Volume USD"].cast("float") + sys.float_info.min).alias("Volume USD"),
+                       (functions.log(data["Volume USD"].cast("float") + sys.float_info.min) - functions.log(data["Volume BTC"].cast("float") + sys.float_info.min)).alias("Weighted"))
+    
     stream = data.writeStream.foreachBatch(foreach_batch_function).start()
     stream.awaitTermination(600)
     
