@@ -39,10 +39,6 @@ bitcoin_schema = types.StructType([
 ])
 
 col_order = ["timestamp", "Open", "High", "Low", "Close", "Volume USD", "Volume BTC", "Weighted"]
-
-assembler = VectorAssembler(
-                            inputCols = col_order,
-                            outputCol = "features")
                             
 
 def foreach_batch_function(df, epoch_id):
