@@ -1,10 +1,12 @@
 from pyspark.sql import functions, types
 import datetime
 
-
-
+"""
+A Bitcoin model that contains a dataframe of historical information with 
+methods to get aggregated information
+"""
 class Bitcoin:
-
+    # Get average Close price for each hour of day
     def get_hourly_avg(self):
         data = self.data
         hourly_agg = data.withColumn('hour', functions.hour(data['timestamp']))
@@ -14,6 +16,7 @@ class Bitcoin:
         result.cache()
         return get_label_value(result.collect())
     
+    # Get average Bitcoin volume for each hour of day 
     def get_hourly_avg_v(self):
         data = self.data
         hourly_agg = data.withColumn('hour', functions.hour(data['timestamp']))
@@ -22,6 +25,7 @@ class Bitcoin:
         result.cache()
         return get_label_value(result.collect())
 
+    # Get daily average Close price
     def get_daily_avg(self):
         data = self.data
         daily_agg = data.withColumn('date', functions.date_trunc('dd', data['timestamp']))
@@ -30,6 +34,7 @@ class Bitcoin:
         result.cache()
         return get_label_value(result.collect())
     
+    # Get daily average Bitcoin volume
     def get_daily_avg_v(self):
         data = self.data
         daily_agg = data.withColumn('date', functions.date_trunc('dd', data['timestamp']))
@@ -38,6 +43,7 @@ class Bitcoin:
         result.cache()
         return get_label_value(result.collect())
 
+    # Get average Close price for each month of year
     def get_monthly_avg(self):
         data = self.data
         add_month = data.withColumn('month', functions.month(data['timestamp']))
@@ -46,6 +52,7 @@ class Bitcoin:
         result.cache()
         return get_label_value(result.collect())
     
+    # Get average Bitcoin volume for each month of year
     def get_monthly_avg_v(self):
         data = self.data
         add_month = data.withColumn('month', functions.month(data['timestamp']))
@@ -54,6 +61,7 @@ class Bitcoin:
         result.cache()
         return get_label_value(result.collect())
 
+    # Get average Close price for each day of year
     def get_dayofyear_avg(self):
         data = self.data
         day = data.withColumn('day', functions.dayofyear(data['timestamp']))
@@ -62,6 +70,7 @@ class Bitcoin:
         result.cache()
         return get_label_value(result.collect())
 
+    # Get average Bitcoin volume for each day of year
     def get_dayofyear_avg_v(self):
         data = self.data
         day = data.withColumn('day', functions.dayofyear(data['timestamp']))
@@ -70,12 +79,14 @@ class Bitcoin:
         result.cache()
         return get_label_value(result.collect())
 
+    # Get all Close price with timestamp
     def get_full_data(self):
         data = self.data
         full = data.select('timestamp', 'Close').orderBy('timestamp')
         full.cache()
         return get_label_value(full.collect())
     
+    # Get all Bitcoin volume with timestamp
     def get_full_data_v(self):
         data = self.data
         full = data.select('timestamp', 'Volume BTC').orderBy('timestamp')
@@ -101,11 +112,12 @@ class Bitcoin:
         data = data.withColumn("timestamp", functions.to_timestamp(data['Date'], 'yyyy-MM-dd hh-aa')).drop('Date').cache()
         self.data = data.where(data['timestamp'].isNotNull())
 
-
+# Helper function to get the month from timestamp
 @functions.udf(returnType=types.IntegerType())
 def get_month(date):
     return date.month
 
+# Helper function to format data
 def get_label_value(rows):
     label = []
     value = []

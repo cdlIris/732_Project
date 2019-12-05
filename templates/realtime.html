@@ -113,7 +113,6 @@
                              backgroundColor: [
                                  'rgba(255, 99, 132, 0.2)',
                                  'rgba(54, 162, 235, 0.2)'
-                                //  'rgba(255, 206, 86, 0.2)'
                              ]
                          }]
                      },
@@ -127,13 +126,13 @@
                 var src_Data = [];
                 var src_Prop = [];
                 var src_Pred = [];
+                // update graph only if new data received
                 setInterval(function(){
                      $.getJSON('/realtime/refreshData', {
                      }, function(data) {
                          src_Labels = data.sLabel;
                          src_Data = data.sData;
                          src_Pred = data.sPred;
-                        //  src_Prop = data.sProp;
                      });
                      if (src_Data.length!=0){
                         myChart.data.labels = src_Labels;
@@ -141,11 +140,8 @@
                         myChart.data.datasets[1].data = src_Pred;
                         myChart.update();
                      }
-                    //  if (src_Prop.length!=0){
-                    //     pieChart.data.datasets[0].data = src_Prop;
-                    //     pieChart.update();
-                    //  }
                 },1000);
+                // update graph only if new data received
                 setInterval(function(){
                      $.getJSON('/realtime/refreshDecision', {
                      }, function(data) {
