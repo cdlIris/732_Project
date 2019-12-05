@@ -9,15 +9,15 @@
 
 <body>
   <div class="col-md-12">
-      <div class="title">
-          <h1>Historical Price</h1>
-          <a href="/history/volume">[View Volume Data]</a>
-      </div>
-    <a class="btn btn-primary" href='/history'>Overview</a>
-    <a class="btn btn-primary" href='/history/daily'>Daily Average</a>
-    <a class="btn btn-primary" href='/history/day'>Day of Year Average</a>
-    <a class="btn btn-primary" href='/history/monthly'>Monthly Average</a>
-    <a class="btn btn-primary" href='/history/hourly'>Hour of Day Average</a>
+    <div class="title">
+    <h1>Historical Price</h1>
+    <a href="/history">[View Price Data]</a>
+    </div>
+    <a class="btn btn-primary" href='/history/volume'>Overview</a>
+    <a class="btn btn-primary" href='/history/daily/volume'>Daily Average</a>
+    <a class="btn btn-primary" href='/history/day/volume'>Day of Year Average</a>
+    <a class="btn btn-primary" href='/history/monthly/volume'>Monthly Average</a>
+    <a class="btn btn-primary" href='/history/hourly/volume'>Hour of Day Average</a>
     <div class="wrapper">
     
     <canvas id="myChart" width="1000" height="500"></canvas>
@@ -34,17 +34,17 @@
             label: '{{ title }}',
             fill: true,
             lineTension: 0.1,
-            backgroundColor: "rgba(75,192,192,0.4)",
-            borderColor: "rgba(75,192,192,1)",
+            backgroundColor: "rgba(255,99,132,0.2)",
+            borderColor: "rgba(255,99,132,1)",
             borderCapStyle: 'butt',
             borderDash: [],
             borderDashOffset: 0.0,
             borderJoinStyle: 'miter',
-            pointBorderColor: "rgba(75,192,192,1)",
+            pointBorderColor: "rgba(255,99,132,1)",
             pointBackgroundColor: "#fff",
             pointBorderWidth: 1,
             pointHoverRadius: 5,
-            pointHoverBackgroundColor: "rgba(75,192,192,1)",
+            pointHoverBackgroundColor: "rgba(255,99,132,1)",
             pointHoverBorderColor: "rgba(220,220,220,1)",
             pointHoverBorderWidth: 2,
             pointRadius: 1,

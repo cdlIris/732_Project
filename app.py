@@ -9,15 +9,6 @@ from wtforms import StringField, SubmitField
 main = Blueprint('main', __name__)
 bootstrap = Bootstrap()
 
-# @main.route("/history/query", methods=["GET", "POST"])
-# def get_price_on_date(date):
-#     label, value = bitcoin_model.get_data_on_date(date)
-#     return render_template('temp.html', title='Bitcoin price on '+date, labels=label, values=value)
-
-@main.route("/history/day", methods=["GET"])
-def get_dayofyear_avg():
-    label, value = bitcoin_model.get_dayofyear_avg()
-    return render_template('history.html', title='Bitcoin price in USD', labels=label, values=value)
 
 @main.route("/")
 def index():
@@ -27,6 +18,12 @@ def index():
 def get_full_data():
     label, value = bitcoin_model.get_full_data()
     return render_template('history.html', title='Bitcoin price in USD', labels=label, values=value)
+
+@main.route("/history/day", methods=["GET"])
+def get_dayofyear_avg():
+    label, value = bitcoin_model.get_dayofyear_avg()
+    return render_template('history.html', title='Bitcoin price in USD', labels=label, values=value)
+
 @main.route("/history/daily", methods=["GET"])
 def get_daily():
     label, value = bitcoin_model.get_daily_avg()
@@ -39,6 +36,31 @@ def get_monthly():
 def get_hourly():
     label, value = bitcoin_model.get_hourly_avg()
     return render_template('history.html', title='Bitcoin price in USD', labels=label, values=value)
+
+@main.route("/history/volume", methods=["GET"])
+def get_full_data_v():
+    label, value = bitcoin_model.get_full_data_v()
+    return render_template('history_v.html', title='Amount of Bitcoin in Transaction', labels=label, values=value, mode='vol')
+
+@main.route("/history/day/volume", methods=["GET"])
+def get_dayofyear_avg_v():
+    label, value = bitcoin_model.get_dayofyear_avg_v()
+    return render_template('history_v.html', title='Amount of Bitcoin in Transaction', labels=label, values=value, mode='vol')
+
+@main.route("/history/daily/volume", methods=["GET"])
+def get_daily_v():
+    label, value = bitcoin_model.get_daily_avg_v()
+    return render_template('history_v.html', title='Amount of Bitcoin in Transaction', labels=label, values=value, mode='vol')
+@main.route("/history/monthly/volume", methods=["GET"])
+def get_monthly_v():
+    label, value = bitcoin_model.get_monthly_avg_v()
+    return render_template('history_v.html', title='Amount of Bitcoin in Transaction', labels=label, values=value, mode='vol')
+@main.route("/history/hourly/volume", methods=['GET'])
+def get_hourly_v():
+    label, value = bitcoin_model.get_hourly_avg_v()
+    return render_template('history_v.html', title='Amount of Bitcoin in Transaction', labels=label, values=value, mode='vol')
+
+
 
 labels = []
 values = []
