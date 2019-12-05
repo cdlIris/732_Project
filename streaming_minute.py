@@ -38,7 +38,7 @@ bitcoin_schema = types.StructType([
     types.StructField("Weighted", types.FloatType())
 ])
 
-col_order = ["timestamp", "Open", "High", "Low", "Close", "Volume USD", "Volume BTC", "Weighted"]
+col_order = ["timestamp", "Open", "High", "Low", "Close", "Weighted"]
                             
 
 def foreach_batch_function(df, epoch_id):
@@ -52,7 +52,7 @@ def foreach_batch_function(df, epoch_id):
     else:
         url = 'http://127.0.0.1:5000/realtime/updateData'
         df = spark.createDataFrame(realtime_prices)
-        model = PipelineModel.load("bitcoin_model")
+        model = PipelineModel.load("bitcoin_model_OHLCW")
         df.show()
         w = Window.partitionBy().orderBy(functions.col("timestamp").cast('long'))
 
@@ -77,8 +77,8 @@ def foreach_batch_function(df, epoch_id):
         real_prices = [str(item.Close) for item in realtime_prices] + [None]
         request_data = {'label': str(real_time), 'data': str(real_prices), 'prediction':str(pred_list)}
         print(request_data)
-        response = requests.post(url, data=request_data)
-    
+#        response = requests.post(url, data=request_data)
+
         del realtime_prices[0]
         realtime_prices.append(data[0][0])
         assert(len(realtime_prices) == DISPLAY_LEN)
@@ -111,13 +111,12 @@ def main():
     data = data.withColumn('time_end', convert_timestamp(data['timeend'])).drop("timeend")
     data = data.withColumn('timestamp', functions.unix_timestamp("time_end", 'yyyy/MM/dd HH:mm').cast("timestamp")).drop("time_end")
     data = data.select(data["timestamp"],
-                       functions.log(data["Open"].cast("float") + sys.float_info.min).alias("Open"),
-                       functions.log(data["High"].cast("float") + sys.float_info.min).alias("High"),
-                       functions.log(data["Low"].cast("float") + sys.float_info.min).alias("Low"),
-                       functions.log(data["Close"].cast("float") + sys.float_info.min).alias("Close"),
-                       functions.log(data["Volume BTC"].cast("float") + sys.float_info.min).alias("Volume BTC"),
-                       functions.log(data["Volume USD"].cast("float") + sys.float_info.min).alias("Volume USD"),
-                       (functions.log(data["Volume USD"].cast("float") + sys.float_info.min) - functions.log(data["Volume BTC"].cast("float") + sys.float_info.min)).alias("Weighted"))
+                       data["Open"].cast("float"),
+                       data["High"].cast("float"),
+                       data["Low"].cast("float"),
+                       data["Close"].cast("float"),
+                       (data["Volume USD"] / (sys.float_info.min + data["Volume BTC"])).alias("Weighted"))
+                      
     
     
     stream = data.writeStream.foreachBatch(foreach_batch_function).start()
