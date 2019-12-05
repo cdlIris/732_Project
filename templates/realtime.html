@@ -7,8 +7,8 @@
     	<meta charset="utf-8"/>
     	<title>Real-Time Bitcoin Price</title>
     	<script src='https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js'></script>
-    	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-	
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        
 	</head>
 	<body>
     <style>
@@ -20,24 +20,36 @@
         }
     </style>
     <div class="container-fluid">
-        <div class="row">
+        <div class="row align-items-center">
         <div class="col-sm-8" style="text-align: center;">
         	<h2>Real-Time Bitcoin Price in USD</h2>
-        	<div style="width:700px;height=500px">
+        	<div style="position: relative;">
             	<canvas id="chart"></canvas>
             </div>
         </div>
         <div class="col-sm-4" style="text-align: center;">
-            <h4>some explanations here.</h4>
+            <div class="card card-body">
+                    <br></br>
+                    <br></br>
+                    <br></br>
+                    <br></br>
+                    <br></br>
+            <p style="font-size: 18px;">  We provide real-time Market Bitcoin price in minute interval and predicted price based on past market information.</p>
+            </div>
         </div>
         </div>
     </div>
     <div class="container-fluid bg-grey">
-        <div class="row">
-        <div class="col-sm-4" style="text-align: center;">
-            <h4>some explanations here.</h4>
+        <div class="row align-items-center">
+        <div class="col-sm-4" style="text-align: left;">
+            <div class="card card-body">
+                <br></br>
+                <br></br>
+            <p style="font-size: 18px;">     Investment advice based on latest tweets sentiment score and Bitcoin price rise and fall. Purchase would be recommended if price falls, and Sale would be recommended if price rises.</p>
+            
         </div>
-        <div class="col-sm-8" style="text-align: center;">
+        </div>
+        <div class="col-sm-8" style="text-align: left;">
                 <h2>Buy/Sell Decision</h2>
                 <div style="width:500px;height=350px">
                     <canvas id="pie_chart"></canvas>

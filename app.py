@@ -35,6 +35,10 @@ def get_daily():
 def get_monthly():
     label, value = bitcoin_model.get_monthly_avg()
     return render_template('history.html', title='Bitcoin price in USD', labels=label, values=value)
+@main.route("/history/hourly", methods=['GET'])
+def get_hourly():
+    label, value = bitcoin_model.get_hourly_avg()
+    return render_template('history.html', title='Bitcoin price in USD', labels=label, values=value)
 
 labels = []
 values = []
