@@ -22,10 +22,12 @@ spark.sparkContext.setLogLevel('WARN')
 kafka = 'localhost:9092'
 zookeeper = "localhost:2181"
 
-DISPLAY_LEN = 4
+DISPLAY_LEN = 3
 LIST_LEN = DISPLAY_LEN+1
 realtime_prices = []
 realtime_predictions = []
+residual_err = 0
+last_pred = 0
 
 bitcoin_schema = types.StructType([
     types.StructField('timestamp', types.TimestampType()),
@@ -41,8 +43,12 @@ bitcoin_schema = types.StructType([
 col_order = ["timestamp", "Open", "High", "Low", "Close", "Weighted"]
                             
 
+
 def foreach_batch_function(df, epoch_id):
     data = [df.collect()]
+    global realtime_prices
+    global residual_err
+    global last_pred
 
     if len(data[0]) == 0:
         pass
@@ -57,16 +63,20 @@ def foreach_batch_function(df, epoch_id):
         w = Window.partitionBy().orderBy(functions.col("timestamp").cast('long'))
 
         for feature in col_order[1:]:
-            for diff in range(1,4):
-                name = feature + "_lag_{}".format(diff)
+            for diff in range(1,3):
+                name = feature + "_lag_{}".format(diff+1)
                 df = df.withColumn(name, functions.lag(df[feature], count=diff).over(w))
         df = df.na.drop()
         
         predictions = model.transform(df)
         predictions.select("prediction").show()
 
-        pred = predictions.select("prediction").collect()
-        realtime_predictions.append(str(pred[0].prediction))
+        pred = predictions.select("prediction","Close").collect()
+        if realtime_predictions != []:
+            residual_err = pred[0].Close - last_pred
+            print("!!!!!!!!!!!!!!!!! residual err is ", residual_err)
+        last_pred = pred[0].prediction
+        realtime_predictions.append(str(pred[0].prediction + residual_err))
         diff = LIST_LEN-len(realtime_predictions)
         if diff > 0:
             pred_list = [None for i in range(diff)]+realtime_predictions
