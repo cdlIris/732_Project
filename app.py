@@ -3,8 +3,6 @@ from flask_bootstrap import Bootstrap
 from historical import Bitcoin
 import json
 import ast
-from flask_wtf import Form
-from wtforms import StringField, SubmitField
 
 main = Blueprint('main', __name__)
 bootstrap = Bootstrap()
