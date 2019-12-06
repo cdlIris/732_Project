@@ -26,8 +26,6 @@ DISPLAY_LEN = 3
 LIST_LEN = DISPLAY_LEN+1
 realtime_prices = []
 realtime_predictions = []
-residual_err = 0
-last_pred = 0
 
 bitcoin_schema = types.StructType([
     types.StructField('timestamp', types.TimestampType()),
@@ -47,14 +45,12 @@ col_order = ["timestamp", "Open", "High", "Low", "Close", "Weighted"]
 def foreach_batch_function(df, epoch_id):
     data = [df.collect()]
     global realtime_prices
-    global residual_err
-    global last_pred
+
 
     if len(data[0]) == 0:
         pass
     elif len(realtime_prices) < DISPLAY_LEN:
         realtime_prices.append(data[0][0])
-        print("!!!!!!!!!!!", realtime_prices)
     else:
         url = 'http://127.0.0.1:5000/realtime/updateData'
         df = spark.createDataFrame(realtime_prices)
@@ -71,12 +67,8 @@ def foreach_batch_function(df, epoch_id):
         predictions = model.transform(df)
         predictions.select("prediction").show()
 
-        pred = predictions.select("prediction","Close").collect()
-        if realtime_predictions != []:
-            residual_err = pred[0].Close - last_pred
-            print("!!!!!!!!!!!!!!!!! residual err is ", residual_err)
-        last_pred = pred[0].prediction
-        realtime_predictions.append(str(pred[0].prediction + residual_err))
+        pred = predictions.select("prediction").collect()
+        realtime_predictions.append(str(pred[0].prediction))
         diff = LIST_LEN-len(realtime_predictions)
         if diff > 0:
             pred_list = [None for i in range(diff)]+realtime_predictions
@@ -87,7 +79,7 @@ def foreach_batch_function(df, epoch_id):
         real_prices = [str(item.Close) for item in realtime_prices] + [None]
         request_data = {'label': str(real_time), 'data': str(real_prices), 'prediction':str(pred_list)}
         print(request_data)
-#        response = requests.post(url, data=request_data)
+        response = requests.post(url, data=request_data)
 
         del realtime_prices[0]
         realtime_prices.append(data[0][0])
@@ -130,7 +122,7 @@ def main():
     
     
     stream = data.writeStream.foreachBatch(foreach_batch_function).start()
-    stream.awaitTermination(600)
+    stream.awaitTermination(60000)
     
 
 
