@@ -40,7 +40,7 @@ bitcoin_schema = types.StructType([
 
 col_order = ["timestamp", "Open", "High", "Low", "Close", "Weighted"]
                             
-
+model = PipelineModel.load("bitcoin_model_OHLCW")
 
 def foreach_batch_function(df, epoch_id):
     data = [df.collect()]
@@ -54,7 +54,7 @@ def foreach_batch_function(df, epoch_id):
     else:
         url = 'http://127.0.0.1:5000/realtime/updateData'
         df = spark.createDataFrame(realtime_prices)
-        model = PipelineModel.load("bitcoin_model_OHLCW")
+        # model = PipelineModel.load("bitcoin_model_OHLCW")
         df.show()
         w = Window.partitionBy().orderBy(functions.col("timestamp").cast('long'))
 
