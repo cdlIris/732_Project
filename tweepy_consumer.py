@@ -56,7 +56,7 @@ udf_senti_score = functions.udf(get_senti_score)
 udf_get_text=functions.udf(get_text)
 udf_get_tweepy_time=functions.udf(get_tweepy_time)
 
-
+model = PipelineModel.load("tweet_model")
 def main(topic1):
     
     messages = spark.readStream.format('kafka').option('subscribe',topic).option('kafka.bootstrap.servers', 'localhost:9092').load()
@@ -86,7 +86,7 @@ def main(topic1):
         if df.count()>=5: #we have the previous 5 interval's output for each minutes,then do the prediction by using sentiment model
             print("Begin model prediction here...............")
             w = Window.partitionBy().orderBy(functions.col("end").cast('long'))
-            model = PipelineModel.load("tweet_model")
+            
             for feature in ["negative", "neutral", "positive", "compound"]:
                 for diff in range(1, 5):
                     name = feature + "_lag_{}".format(diff)

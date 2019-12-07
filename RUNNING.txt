@@ -19,6 +19,8 @@ You can install Python dependencies using pip install -r requirements.txt. Here 
 - kafka 1.3.5
 - tweepy 3.8.0
 - cryptocompare 0.6.4
+- tweet-preprocessor 0.5.0
+- vaderSentiment 3.2.1
 
 Installation
 git clone https://github.com/cdlIris/732_Project.git
@@ -29,17 +31,17 @@ How to run
 zkServer start
 kafka-server-start /usr/local/etc/kafka/server.properties
 
-# Start local web server
+# Start local web server in a separate terminal window
 spark-submit server.py
 
-# Start bitcoin streaming data producer
+# Start bitcoin streaming data producer in a separate terminal window
 python3 cry.py
 
-# Start bitcoin streaming data consumer
+# Start bitcoin streaming data consumer, in a separate terminal window 
 spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.4 streaming_minute.py
 
-# Start tweepy streaming data producer
+# Start tweepy streaming data producer, in a separate terminal window
 python tweepy_producer.py tweets
 
-# Start tweepy streaming data consumer
+# Start tweepy streaming data consumer, in a separate terminal window
 spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.4 tweepy_consumer.py tweets
