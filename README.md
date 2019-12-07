@@ -5,7 +5,7 @@ Predicting bitcoin price and help users making buying/selling decsion. Please fi
 ## Web Visulization
 
 ### Font Page of the application
-![](img/font.jpeg)
+![](img/front.jpeg)
 
 ### Historical Page of Bitcoin Price
 ![](img/historical.jpeg)
